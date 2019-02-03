@@ -1765,7 +1765,7 @@ int main ( int argc, char ** argv )
 	}
 
 	sphBacktraceSetBinaryName ( argv[0] );
-	SetSignalHandlers();
+	//SetSignalHandlers();
 
 	///////////////
 	// load config
@@ -1895,6 +1895,7 @@ int main ( int argc, char ** argv )
 		hConf["index"].IterateStart ();
 		while ( hConf["index"].IterateNext() )
 		{
+
 			bool bLastOk = DoIndex ( hConf["index"].IterateGet (), hConf["index"].IterateGetKey().cstr(), hConf["source"], bVerbose, fpDumpRows );
 			if ( bLastOk && ( sphMicroTimer() - tmRotated > ROTATE_MIN_INTERVAL ) && g_bSendHUP && SendRotate ( hConf, false ) )
 				tmRotated = sphMicroTimer();

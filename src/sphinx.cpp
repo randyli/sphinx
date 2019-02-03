@@ -74,6 +74,11 @@
 #include <re2/re2.h>
 #endif
 
+
+#if USE_JIEBA
+#include <cppjieba/Jieba.hpp>
+#endif
+
 #if USE_WINDOWS
 	#include <io.h> // for open()
 
@@ -187,6 +192,15 @@ static int			g_iReadUnhinted			= DEFAULT_READ_UNHINTED;
 
 CSphString			g_sLemmatizerBase		= SHAREDIR;
 bool				g_bProgressiveMerge		= false;
+
+
+#if USE_JIEBA
+CSphString JIEBA_DICT_PATH = "";
+CSphString JIEBA_HMM_PATH = "";
+CSphString JIEBA_USER_DICT_PATH = "";
+CSphString JIEBA_IDF_PATH = "";
+CSphString JIEBA_STOP_WORD_PATH = "";
+#endif
 
 // quick hack for indexer crash reporting
 // one day, these might turn into a callback or something
@@ -2442,6 +2456,28 @@ protected:
 };
 
 
+/// Jieba tokenizer
+#if USE_JIEBA
+
+template < bool IS_QUERY >
+class CSphTokenizer_Jieba : public CSphTokenizer_UTF8<IS_QUERY>
+{
+public:
+						CSphTokenizer_Jieba();
+						~CSphTokenizer_Jieba();
+
+public:
+	virtual BYTE *		GetToken ();
+	virtual void		SetBuffer ( const BYTE * sBuffer, int iLength );
+
+protected:
+	cppjieba::Jieba*              m_pJieba;
+	std::string                   m_sBuffer;
+	std::vector<std::string>      m_pWords;
+	int                           m_iTokenIndex;
+};
+#endif
+
 struct CSphNormalForm
 {
 	CSphString				m_sForm;
@@ -2771,15 +2807,25 @@ void FillStoredTokenInfo ( StoredToken_t & tToken, const BYTE * sToken, ISphToke
 
 //////////////////////////////////////////////////////////////////////////
 
+#if USE_JIEBA
+ISphTokenizer * sphCreateUTF8Tokenizer ()
+{
+	return new CSphTokenizer_Jieba<false> ();
+}
+#else
 ISphTokenizer * sphCreateUTF8Tokenizer ()
 {
 	return new CSphTokenizer_UTF8<false> ();
 }
-
+#endif
 ISphTokenizer * sphCreateUTF8NgramTokenizer ()
 {
 	return new CSphTokenizer_UTF8Ngram<false> ();
 }
+
+#if USE_JIEBA
+
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -5209,7 +5255,52 @@ BYTE * CSphTokenizer_UTF8Ngram<IS_QUERY>::GetToken ()
 	return CSphTokenizer_UTF8<IS_QUERY>::GetToken ();
 }
 
+
 //////////////////////////////////////////////////////////////////////////
+#if USE_JIEBA
+
+template < bool IS_QUERY >
+CSphTokenizer_Jieba<IS_QUERY>::CSphTokenizer_Jieba ()
+{
+	m_pJieba = new cppjieba::Jieba(
+		JIEBA_DICT_PATH.cstr(),
+		JIEBA_HMM_PATH.cstr(),
+		JIEBA_USER_DICT_PATH.cstr(),
+		JIEBA_IDF_PATH.cstr(),
+		JIEBA_STOP_WORD_PATH.cstr()
+	);
+}
+
+template < bool IS_QUERY >
+CSphTokenizer_Jieba<IS_QUERY>::~CSphTokenizer_Jieba ()
+{
+	SafeDelete(m_pJieba);
+}
+
+template < bool IS_QUERY >
+void CSphTokenizer_Jieba<IS_QUERY>::SetBuffer ( const BYTE * sBuffer, int iLength )
+{
+	this->m_pBuffer = sBuffer;
+	m_sBuffer = std::string((const char*)sBuffer, iLength);
+	m_pJieba->Cut(m_sBuffer, m_pWords, true);
+	m_iTokenIndex = 0;
+}
+
+template < bool IS_QUERY >
+BYTE * CSphTokenizer_Jieba<IS_QUERY>::GetToken ()
+{
+	if (m_iTokenIndex < m_pWords.size()) {
+		  int tokenLen = m_pWords[m_iTokenIndex].length();
+		  memcpy(this->m_sAccum, m_pWords[m_iTokenIndex].c_str(), tokenLen);
+		  this->m_sAccum[tokenLen] = '\0';
+		  m_iTokenIndex++;
+		  return this->m_sAccum;
+	}
+	return NULL;
+}
+#endif
+//////////////////////////////////////////////////////////////////////////
+
 
 CSphMultiformTokenizer::CSphMultiformTokenizer ( ISphTokenizer * pTokenizer, const CSphMultiformContainer * pContainer )
 	: CSphTokenFilter ( pTokenizer )

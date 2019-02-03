@@ -697,6 +697,14 @@ static KeyDesc_t g_dKeysCommon[] =
 	{ "rlp_max_batch_docs",		0, NULL },
 	{ "plugin_dir",				0, NULL },
 	{ "progressive_merge",		0, NULL },
+#if USE_JIEBA	
+	{ "jieba_dict",		0, NULL },
+	{ "jieba_hmm",		0, NULL },
+	{ "jieba_user_dict",0, NULL },
+	{ "jieba_idf",		0, NULL },
+	{ "jieba_stop",		0, NULL },
+	
+#endif
 	{ NULL,						0, NULL }
 };
 
@@ -2432,6 +2440,15 @@ void sphConfigureCommon ( const CSphConfig & hConf )
 	CSphConfigSection & hCommon = hConf["common"]["common"];
 	g_sLemmatizerBase = hCommon.GetStr ( "lemmatizer_base" );
 	sphConfigureRLP ( hCommon );
+
+	#if USE_JIEBA
+	JIEBA_DICT_PATH      = hCommon.GetStr ( "jieba_dict" );
+ 	JIEBA_HMM_PATH       = hCommon.GetStr ( "jieba_hmm" );
+ 	JIEBA_USER_DICT_PATH = hCommon.GetStr ( "jieba_user_dict" );
+ 	JIEBA_IDF_PATH       = hCommon.GetStr ( "jieba_idf" );
+ 	JIEBA_STOP_WORD_PATH = hCommon.GetStr ( "jieba_stop" );
+ 	sphWarning ( "jieba config JIEBA_DICT_PATH '%s'", JIEBA_DICT_PATH.cstr() );
+	#endif
 
 	g_bProgressiveMerge = ( hCommon.GetInt ( "progressive_merge", 1 )!=0 );
 

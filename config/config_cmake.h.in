@@ -28,6 +28,9 @@
 #cmakedefine DL_UNIXODBC ${DL_UNIXODBC}
 #cmakedefine UNIXODBC_LIB "${UNIXODBC_LIB}"
 
+/* Define to 1 if you want to use jieba tokenizer */
+#cmakedefine USE_JIEBA ${USE_JIEBA}
+
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine HAVE_BACKTRACE ${HAVE_BACKTRACE}
 

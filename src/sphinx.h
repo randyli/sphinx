@@ -736,6 +736,13 @@ ISphTokenizer *			sphCreateUTF8Tokenizer ();
 /// create UTF-8 tokenizer with n-grams support (for CJK n-gram indexing)
 ISphTokenizer *			sphCreateUTF8NgramTokenizer ();
 
+#if USE_JIEBA
+/// create Jieba tokenizer
+ISphTokenizer *			sphCreateJiebaTokenizer ();
+
+#endif
+
+
 /////////////////////////////////////////////////////////////////////////////
 // DICTIONARIES
 /////////////////////////////////////////////////////////////////////////////
@@ -3519,6 +3526,14 @@ void				sphCollationInit ();
 
 extern CSphString g_sLemmatizerBase;
 extern bool g_bProgressiveMerge;
+
+#if USE_JIEBA
+extern CSphString JIEBA_DICT_PATH;
+extern CSphString JIEBA_HMM_PATH;
+extern CSphString JIEBA_USER_DICT_PATH;
+extern CSphString JIEBA_IDF_PATH;
+extern CSphString JIEBA_STOP_WORD_PATH;
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
