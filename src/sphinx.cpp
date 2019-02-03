@@ -5282,7 +5282,7 @@ void CSphTokenizer_Jieba<IS_QUERY>::SetBuffer ( const BYTE * sBuffer, int iLengt
 {
 	this->m_pBuffer = sBuffer;
 	m_sBuffer = std::string((const char*)sBuffer, iLength);
-	m_pJieba->Cut(m_sBuffer, m_pWords, true);
+	m_pJieba->CutForSearch(m_sBuffer, m_pWords, true);
 	m_iTokenIndex = 0;
 }
 
