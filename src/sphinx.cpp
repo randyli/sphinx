@@ -5291,8 +5291,9 @@ BYTE * CSphTokenizer_Jieba<IS_QUERY>::GetToken ()
 {
 	if (m_iTokenIndex < m_pWords.size()) {
 		  int tokenLen = m_pWords[m_iTokenIndex].length();
-		  memcpy(this->m_sAccum, m_pWords[m_iTokenIndex].c_str(), tokenLen);
-		  this->m_sAccum[tokenLen] = '\0';
+          int wordLen =  tokenLen > SPH_MAX_WORD_LEN*3 ? SPH_MAX_WORD_LEN*3 :  tokenLen;
+          memcpy( this->m_sAccum, m_pWords[m_iTokenIndex].c_str(), wordLen);
+          this->m_sAccum[wordLen] = '\0';
 		  m_iTokenIndex++;
 		  return this->m_sAccum;
 	}
@@ -8585,7 +8586,7 @@ CSphIndex::~CSphIndex ()
 	QcacheDeleteIndex ( m_iIndexId );
 	SafeDelete ( m_pFieldFilter );
 	SafeDelete ( m_pQueryTokenizer );
-	SafeDelete ( m_pTokenizer );
+	//SafeDelete ( m_pTokenizer );
 	SafeDelete ( m_pDict );
 }
 

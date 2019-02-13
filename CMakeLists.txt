@@ -143,6 +143,8 @@ else (WIN32)
 		if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -Wno-missing-exception-spec -Wno-implicit-exception-spec-mismatch -Wno-invalid-offsetof ${CLANGFLAGS}")
 		endif()
+        message(STATUS ${CMAKE_C_FLAGS})
+        message(STATUS ${CMAKE_CXX_FLAGS})
 	endif (HAVE_GCC_LIKE)
 
 	message (STATUS "Storing compiler version")
@@ -203,6 +205,7 @@ else (WIN32)
 		SET (SPH_DONT_OVERRIDE_MEMROUTINES 1)
 		list (APPEND BANNER "DISABLE_MEMROUTINES=ON")
 	endif (DISABLE_MEMROUTINES)
+
 
 	message (STATUS "Option USE_SYSLOG ${USE_SYSLOG}")
 	CMAKE_DEPENDENT_OPTION (USE_SYSLOG "compile with possibility to use syslog for logging" ON "HAVE_SYSLOG_H" OFF)
@@ -269,6 +272,7 @@ else (WIN32)
 	set (WITH_MYSQL_INCLUDES "" CACHE PATH "path to MySQL header files")
 	set (WITH_MYSQL_LIBS "" CACHE PATH "path to MySQL library")
 	set (WITH_MYSQL_ROOT "" CACHE PATH "path to the MySQL bundle (where both header and library lives)")
+    
 
 	if (WITH_MYSQL)
 		find_package (MYSQL)
@@ -279,13 +283,14 @@ else (WIN32)
 
 			# -DNDEBUG we set or reset on global level, so purge it from myqsl flags
 			string (REPLACE "-DNDEBUG" "" MYSQL_CXXFLAGS "${MYSQL_CXXFLAGS}")
+			string (REPLACE "-static-libgcc" "" MYSQL_CXXFLAGS "${MYSQL_CXXFLAGS}")
 			# keep only defs, include paths and libs
 			string (REGEX MATCHALL "-[DLIl]([^ ]+)" MYSQL_CXXFLAGS "${MYSQL_CXXFLAGS}")
 			# convert list after MATCHALL back to plain string
 			string (REGEX REPLACE ";" " " MYSQL_CXXFLAGS "${MYSQL_CXXFLAGS}")
 
 			if (MYSQL_CXXFLAGS)
-				set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYSQL_CXXFLAGS}")
+				set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYSQL_CXXFLAGS} -static-libgcc")
 			endif (MYSQL_CXXFLAGS)
 			CMAKE_DEPENDENT_OPTION (DL_MYSQL "load mysql library dynamically" ON "MYSQL_FOUND;HAVE_DL;NOT STATIC_MYSQL" OFF)
 			CMAKE_DEPENDENT_OPTION (STATIC_MYSQL "link to mysql library statically" OFF "MYSQL_FOUND;NOT DL_MYSQL" OFF)
@@ -315,6 +320,7 @@ else (WIN32)
 					********************************************************************************")
 		endif (MYSQL_FOUND)
 	endif (WITH_MYSQL)
+    
 
 	# test for jieba
 	message (STATUS "Option WITH_JIEBA ${WITH_JIEBA}")
@@ -324,7 +330,8 @@ else (WIN32)
 		if (WITH_JIEBA_INCLUDES)
 			set(USE_JIEBA 1)
 			message(STATUS "jieba include ${WITH_JIEBA_INCLUDES}")
-			include_directories (${WITH_JIEBA_INCLUDES})
+			include_directories ("${WITH_JIEBA_INCLUDES}/include")
+			include_directories ("${WITH_JIEBA_INCLUDES}/deps")
 		endif (WITH_JIEBA_INCLUDES)
 	endif (WITH_JIEBA)
 
@@ -727,3 +734,4 @@ else()
 endif()
 
 include (CPack)
+
