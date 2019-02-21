@@ -25,9 +25,7 @@ namespace SphinxAnalyzer
 struct SphToken {
 
 	CSphString text;
-	int pos;
-	
-
+    int pos;
 };
 
 class ISphAnalyzer
@@ -40,19 +38,18 @@ public:
     virtual                         ~ISphAnalyzer () {}
 
 	// analyze a text
-    virtual bool                Analyze ( const CSphString   & text, CSphVector &tokens) = 0;
+    virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens) = 0;
 
 
 };
 
 
-class AnalyzerStandard : public  ISphAnalyzer {
-public：
+class AnalyzerStandard : public  ISphAnalyzer 
+{
+public:
 
 	virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens);
-
 };
-
 
 
 #if USE_JIEBA

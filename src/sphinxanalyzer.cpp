@@ -14,6 +14,7 @@
 //
 
 
+#include "sphinxanalyzer.h"
 namespace SphinxAnalyzer{
 
 
