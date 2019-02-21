@@ -19,33 +19,49 @@
 #include "sphinxstd.h"
 
 
+namespace SphinxAnalyzer
+{
+
+struct SphToken {
+
+	CSphString text;
+	int pos;
+	
+
+};
+
 class ISphAnalyzer
 {
 public:
     /// trivial ctor
-                                    ISphAnalyzer();
+                                    ISphAnalyzer() {}
 
     /// trivial dtor
     virtual                         ~ISphAnalyzer () {}
 
-    /// setup analyzer using given settings
-    virtual void                    Setup ( const CSphAnalyzerSettings & tSettings );
-
-    virtual const CSphAnalyzerSettings &   GetSettings () const { return m_tSettings; }
-
-    virtual void                    SetText ( const BYTE * sBuffer, int iLength ) = 0;
-
-    /// get next token
-    virtual BYTE *                  GetToken () = 0;
+	// analyze a text
+    virtual bool                Analyze ( const CSphString   & text, CSphVector &tokens) = 0;
 
 
-protected:
-    CSphAnalyzerSettings m_tSettings;
+};
+
+
+class AnalyzerStandard : public  ISphAnalyzer {
+public：
+
+	virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens);
 
 };
 
 
 
+#if USE_JIEBA
+class AnalyzerJieba : public ISphAnalyzer {
+	
+};
 
+#endif
+
+}
 
 #endif 
