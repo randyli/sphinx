@@ -17,6 +17,9 @@
 #define _sphinx_analyzer_
 
 #include "sphinxstd.h"
+#if USE_JIEBA
+#include <cppjieba/Jieba.hpp>
+#endif
 
 
 namespace SphinxAnalyzer
@@ -53,8 +56,21 @@ public:
 
 
 #if USE_JIEBA
+struct JiebaConfig {
+	CSphString DICT_PATH;
+	CSphString HMM_PATH;
+	CSphString USER_DICT_PATH;
+	CSphString IDF_PATH;
+	CSphString STOP_WORD_PATH;
+};
+
 class AnalyzerJieba : public ISphAnalyzer {
-	
+public:
+	AnalyzerJieba(const JiebaConfig & config);
+	~AnalyzerJieba();
+	virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens);
+protected:
+	cppjieba::Jieba*			  m_pJieba;
 };
 
 #endif

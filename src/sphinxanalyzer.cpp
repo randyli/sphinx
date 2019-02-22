@@ -15,20 +15,47 @@
 
 
 #include "sphinxanalyzer.h"
+using namespace std;
 namespace SphinxAnalyzer{
 
 
 	bool AnalyzerStandard::Analyze(const CSphString & text, CSphVector < SphToken > & tokens){
-			return true;
+			return false;
 	}
 
+#if USE_JIEBA
+	AnalyzerJieba::AnalyzerJieba(const JiebaConfig & config){
+	this->m_pJieba = new cppjieba::Jieba(
+		config.DICT_PATH.cstr(),
+        config.HMM_PATH.cstr(),
+        config.USER_DICT_PATH.cstr(),
+        config.IDF_PATH.cstr(),
+        config.STOP_WORD_PATH.cstr()
+	);
+	
+	}
+
+	AnalyzerJieba::~AnalyzerJieba(){
+		if(this->m_pJieba) {
+			delete this->m_pJieba;
+		}
+	}
+	bool AnalyzerJieba::Analyze(const CSphString & text, CSphVector < SphToken > & tokens){
+
+		if(!this->m_pJieba) return false;
+
+		vector<string> words;
+		string _text = text.cstr();
+		this->m_pJieba->CutForSearch(_text, words);
+		int pos = 0;
+		for(vector<string>::iterator it=words.begin(); it!=words.end(); it++){
+			SphToken token;
+			token.text = it->c_str();
+			token.pos = ++pos;
+			tokens.Add(token);
+		}
+		return true;
+	}
+#endif
 }
-
-int main(){
-
-	SphinxAnalyzer::ISphAnalyzer* a = new SphinxAnalyzer::AnalyzerStandard();
-
-	return 0;
-}
-
 
