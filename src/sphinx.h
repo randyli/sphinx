@@ -41,7 +41,7 @@
 
 #include "sphinxstd.h"
 #include "sphinxexpr.h" // to remove?
-
+#include "sphinxanalyzer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -3293,6 +3293,9 @@ public:
 	virtual bool				IsStarDict() const { return true; }
 	int64_t						GetIndexId() const { return m_iIndexId; }
 
+	const SphinxAnalyzer::ISphAnalyzer* GetAnalyzer() const {return this->m_pAnalyzer;}
+	void SetAnalyzer(SphinxAnalyzer::ISphAnalyzer* analyzer) {this->m_pAnalyzer = analyzer;}
+		
 public:
 	/// build index by indexing given sources
 	virtual int					Build ( const CSphVector<CSphSource*> & dSources, int iMemoryLimit, int iWriteBuffer ) = 0;
@@ -3422,6 +3425,8 @@ protected:
 	ISphFieldFilter *			m_pFieldFilter;
 	ISphTokenizer *				m_pTokenizer;
 	ISphTokenizer *				m_pQueryTokenizer;
+	//the analyzer
+	SphinxAnalyzer::ISphAnalyzer * 				m_pAnalyzer;
 	CSphDict *					m_pDict;
 
 	int							m_iMaxCachedDocs;

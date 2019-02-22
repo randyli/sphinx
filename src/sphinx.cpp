@@ -14,6 +14,7 @@
 //
 
 #include "sphinx.h"
+#include "sphinxanalyzer.h"
 #include "sphinxstem.h"
 #include "sphinxquery.h"
 #include "sphinxutils.h"

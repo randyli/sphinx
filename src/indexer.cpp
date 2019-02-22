@@ -988,6 +988,17 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 			pTokenizer = sphAotCreateFilter ( pTokenizer, pDict, tSettings.m_bIndexExactWords, tSettings.m_uAotFilterMask );
 	}
 
+
+	////set up analyzer  TODO !!!move to config
+	SphinxAnalyzer::JiebaConfig analyzerConfig;
+	analyzerConfig.DICT_PATH = "/home/sphinx/sphinx/cppjieba/dict/jieba.dict.utf8";
+	analyzerConfig.HMM_PATH = "/home/sphinx/sphinx/cppjieba/dict/hmm_model.utf8";
+	analyzerConfig.USER_DICT_PATH = "/home/sphinx/sphinx/cppjieba/dict/user.dict.utf8";
+	analyzerConfig.IDF_PATH = "/home/sphinx/sphinx/cppjieba/dict/idf.utf8";
+	analyzerConfig.STOP_WORD_PATH = "/home/sphinx/sphinx/cppjieba/dict/stop_words.utf8";
+	SphinxAnalyzer::ISphAnalyzer* analyzer = new SphinxAnalyzer::AnalyzerJieba(analyzerConfig);
+	
+
 	ISphFieldFilter * pFieldFilter = NULL;
 	CSphFieldFilterSettings tFilterSettings;
 	if ( sphConfFieldFilter ( hIndex, tFilterSettings, sError ) )
@@ -1209,6 +1220,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 
 		pIndex->SetFieldFilter ( pFieldFilter );
 		pIndex->SetTokenizer ( pTokenizer );
+		pIndex->SetAnalyzer(analyzer);
 		pIndex->SetDictionary ( pDict );
 		if ( g_bKeepAttrs )
 		{
