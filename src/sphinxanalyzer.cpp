@@ -52,6 +52,7 @@ namespace SphinxAnalyzer{
 			SphToken token;
 			token.text = it->c_str();
 			token.pos = ++pos;
+			token.type = TOKEN_WORD;
 			tokens.Add(token);
 		}
 		return true;

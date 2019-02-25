@@ -25,10 +25,21 @@
 namespace SphinxAnalyzer
 {
 
+enum TOKEN_TYPE{
+	TOKEN_WORD, //commen word
+	TOKEN_SENTENCE, //sentence boundary
+	TOKEN_PARAGRAPH, //paragraph  boundary
+	TOKEN_ZONE,  //zone type
+	TOKEN_NUM
+	
+};
+
 struct SphToken {
 
 	CSphString text;
     int pos;
+	TOKEN_TYPE type;
+	
 };
 
 class ISphAnalyzer

@@ -1942,6 +1942,9 @@ public:
 	/// set tokenizer
 	void								SetTokenizer ( ISphTokenizer * pTokenizer );
 
+	/// set analyzer					
+	void 								SetAnalyzer (SphinxAnalyzer::ISphAnalyzer* analyzer) { this->m_pAnalyzer = analyzer; }
+
 	/// set rows dump file
 	virtual void						SetDumpRows ( FILE * ) {}
 
@@ -2021,6 +2024,7 @@ public:
 
 protected:
 	ISphTokenizer *						m_pTokenizer;	///< my tokenizer
+	SphinxAnalyzer::ISphAnalyzer *		m_pAnalyzer;	///< my analyzer
 	CSphDict *							m_pDict;		///< my dict
 	ISphFieldFilter	*					m_pFieldFilter;	///< my field filter
 
@@ -2079,7 +2083,7 @@ protected:
 
 	bool					BuildZoneHits ( SphDocID_t uDocid, BYTE * sWord );
 	void					BuildSubstringHits ( SphDocID_t uDocid, bool bPayload, ESphWordpart eWordpart, bool bSkipEndMarker );
-	void					BuildRegularHits ( SphDocID_t uDocid, bool bPayload, bool bSkipEndMarker );
+	void					BuildRegularHits ( SphDocID_t uDocid, CSphString text, bool bPayload, bool bSkipEndMarker );
 
 	/// register autocomputed attributes such as field lengths (see index_field_lengths)
 	bool					AddAutoAttrs ( CSphString & sError );

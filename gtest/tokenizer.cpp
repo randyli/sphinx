@@ -48,6 +48,7 @@ TEST_F(TokenizerTest, UTF8Chinese) {
 	ASSERT_EQ(res, true);
 	ASSERT_EQ((tokens[0].text == "这是"), true);
 	ASSERT_EQ(tokens[0].pos, 1);
+	ASSERT_EQ(tokens[0].type, TOKEN_WORD);
 }
 
 

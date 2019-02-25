@@ -1098,6 +1098,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 		}
 
 		pSource->SetTokenizer ( pTokenizer );
+		pSource->SetAnalyzer(analyzer);
 		pSource->SetFieldFilter ( pFieldFilter );
 		pSource->SetDumpRows ( fpDumpRows );
 		dSources.Add ( pSource );

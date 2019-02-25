@@ -25315,9 +25315,25 @@ void CSphSource_Document::BuildSubstringHits ( SphDocID_t uDocid, bool bPayload,
 	// FIELDEND_MASK at blended token stream should be set for HEAD token too
 	int iBlendedHitsStart = -1;
 
+	/////////////////////analyzer start
+	CSphVector<SphinxAnalyzer::SphToken> tokens;
+	int textLen  =  m_pTokenizer->GetBufferEnd() - m_pTokenizer->GetBufferPtr();
+	CSphString text(m_pTokenizer->GetBufferPtr(), textLen );
+	bool isOK = this->m_pAnalyzer->Analyze(text, tokens);
+	if (!isOK) 
+	{
+		printf("some thing error on analyzer\n");
+		return;
+	}
+	for(int i = 0; i< tokens.GetLength(); i++) 
+	{
+		std::cout<<tokens[i].text.cstr()<<std::endl;
+	}
+	/////////////////////analyzer end
+
 	// index all infixes
 	while ( ( m_iMaxHits==0 || m_tHits.m_dData.GetLength()+iIterHitCount<m_iMaxHits )
-		&& ( sWord = m_pTokenizer->GetToken() )!=NULL )
+		&& ( sWord = m_pTokenizer->GetToken() )!=NULL )  
 	{
 		int iLastBlendedStart = TrackBlendedStart ( m_pTokenizer, iBlendedHitsStart, m_tHits.Length() );
 
@@ -25449,7 +25465,7 @@ void CSphSource_Document::BuildSubstringHits ( SphDocID_t uDocid, bool bPayload,
 
 #define BUILD_REGULAR_HITS_COUNT 6
 
-void CSphSource_Document::BuildRegularHits ( SphDocID_t uDocid, bool bPayload, bool bSkipEndMarker )
+void CSphSource_Document::BuildRegularHits ( SphDocID_t uDocid, CSphString text, bool bPayload, bool bSkipEndMarker )
 {
 	bool bWordDict = m_pDict->GetSettings().m_bWordDict;
 	bool bGlobalPartialMatch = !bWordDict && ( m_iMinPrefixLen > 0 || m_iMinInfixLen > 0 );
@@ -25463,7 +25479,65 @@ void CSphSource_Document::BuildRegularHits ( SphDocID_t uDocid, bool bPayload, b
 	// FIELDEND_MASK at last token stream should be set for HEAD token too
 	int iBlendedHitsStart = -1;
 
+	/////////////////////analyzer start
+	CSphVector<SphinxAnalyzer::SphToken> tokens;
+	//int textLen  =  m_pTokenizer->GetBufferEnd() - m_pTokenizer->GetBufferPtr();
+	//CSphString text(m_pTokenizer->GetBufferPtr(), textLen );
+	bool isOK = this->m_pAnalyzer->Analyze(text, tokens);
+	if (!isOK) 
+	{
+		fprintf(stdout, "some thing error on analyzer\n");
+		return;
+	}
+	//for debug
+	std::cout<< "Origin text:";
+	std::cout<<text.cstr();
+	std::cout<< "\n Analyzer result:";
+	for(int i = 0; i< tokens.GetLength(); i++) 
+	{
+		std::cout<<tokens[i].text.cstr()<<"/";
+		memcpy(sBuf, tokens[i].text.cstr(), tokens[i].text.Length());
+		sBuf[tokens[i].text.Length()] = '\0';
+		SphWordID_t iWord = m_pDict->GetWordID ( sBuf );
+		if(iWord) {
+			m_tHits.AddHit ( uDocid, iWord, tokens[i].pos );
+		}
+		
+	}
+
+	m_tState.m_bProcessingHits = false;
+	if ( !bSkipEndMarker && !m_tState.m_bProcessingHits && m_tHits.Length() )
+	{
+		CSphWordHit * pTail = const_cast < CSphWordHit * > ( m_tHits.Last() );
+
+		if ( m_pFieldLengthAttrs )
+			m_pFieldLengthAttrs [ HITMAN::GetField ( pTail->m_uWordPos ) ] = HITMAN::GetPos ( pTail->m_uWordPos );
+
+		Hitpos_t uEndPos = pTail->m_uWordPos;
+		if ( iBlendedHitsStart>=0 )
+		{
+			assert ( iBlendedHitsStart>=0 && iBlendedHitsStart<m_tHits.Length() );
+			Hitpos_t uBlendedPos = ( m_tHits.First() + iBlendedHitsStart )->m_uWordPos;
+			uEndPos = Min ( uEndPos, uBlendedPos );
+		}
+
+		// set end marker for all tail hits
+		const CSphWordHit * pStart = m_tHits.First();
+		while ( pStart<=pTail && uEndPos<=pTail->m_uWordPos )
+		{
+			HITMAN::SetEndMarker ( &pTail->m_uWordPos );
+			pTail--;
+		}
+	}
+	std::cout<<std::endl;
+
+	
+	
+	/////////////////////analyzer end
+
+
 	// index words only
+	/*
 	while ( ( m_iMaxHits==0 || m_tHits.m_dData.GetLength()+BUILD_REGULAR_HITS_COUNT<m_iMaxHits )
 		&& ( sWord = m_pTokenizer->GetToken() )!=NULL )
 	{
@@ -25558,6 +25632,7 @@ void CSphSource_Document::BuildRegularHits ( SphDocID_t uDocid, bool bPayload, b
 			pTail--;
 		}
 	}
+	*/
 }
 
 
@@ -25566,7 +25641,7 @@ void CSphSource_Document::BuildHits ( CSphString & sError, bool bSkipEndMarker )
 	SphDocID_t uDocid = m_tDocInfo.m_uDocID;
 
 	for ( ; m_tState.m_iField<m_tState.m_iEndField; m_tState.m_iField++ )
-	{
+	{	CSphString text;
 		if ( !m_tState.m_bProcessingHits )
 		{
 			// get that field
@@ -25607,7 +25682,7 @@ void CSphSource_Document::BuildHits ( CSphString & sError, bool bSkipEndMarker )
 
 			// tokenize and build hits
 			m_tStats.m_iTotalBytes += iFieldBytes;
-
+			text = CSphString((const char*)sTextToIndex, iFieldBytes);
 			m_pTokenizer->BeginField ( m_tState.m_iField );
 			m_pTokenizer->SetBuffer ( (BYTE*)sTextToIndex, iFieldBytes );
 
@@ -25615,11 +25690,11 @@ void CSphSource_Document::BuildHits ( CSphString & sError, bool bSkipEndMarker )
 		}
 
 		const CSphColumnInfo & tField = m_tSchema.m_dFields[m_tState.m_iField];
-
+		
 		if ( tField.m_eWordpart!=SPH_WORDPART_WHOLE )
 			BuildSubstringHits ( uDocid, tField.m_bPayload, tField.m_eWordpart, bSkipEndMarker );
 		else
-			BuildRegularHits ( uDocid, tField.m_bPayload, bSkipEndMarker );
+			BuildRegularHits ( uDocid,  text, tField.m_bPayload, bSkipEndMarker );
 
 		if ( m_tState.m_bProcessingHits )
 			break;
