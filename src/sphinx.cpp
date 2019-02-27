@@ -16631,6 +16631,38 @@ void ISphQueryFilter::GetKeywords ( CSphVector <CSphKeywordInfo> & dKeywords, co
 	int iQpos = 1;
 	CSphVector<int> dQposWildcards;
 
+	//////////////////start of query analyzer
+	CSphVector<SphinxAnalyzer::SphToken> tokens;
+	//int textLen  =  m_pTokenizer->GetBufferEnd() - m_pTokenizer->GetBufferPtr();
+	//CSphString text(m_pTokenizer->GetBufferPtr(), textLen );
+	CSphString originQuery(m_pOriginQuery);
+	bool isOK = this->m_pAnalyzer->AnalyzeQuery(originQuery, tokens);
+	if (!isOK) 
+	{
+		fprintf(stdout, "some thing error on analyzer\n");
+		return;
+	}
+	//for debug
+	std::cout<< "Origin text:";
+	std::cout<<originQuery.cstr();
+	std::cout<< "\n Analyzer result:";
+	for(int i = 0; i< tokens.GetLength(); i++) 
+	{
+		std::cout<<tokens[i].text.cstr()<<"/";
+		int tokenLen = tokens[i].text.Length();
+		if(tokenLen > SPH_MAX_WORD_LEN){
+			tokenLen = SPH_MAX_WORD_LEN;
+		}
+		memcpy(sTokenized, tokens[i].text.cstr(), tokenLen);
+		sTokenized[tokenLen] = '\0';
+		
+		AddKeywordStats ( sTokenized, sTokenized, iQpos, dKeywords );
+	}
+	return;
+	
+	
+	//////////////////end of query 
+
 	// FIXME!!! got rid of duplicated term stat and qword setup
 	while ( ( sWord = m_pTokenizer->GetToken() )!=NULL )
 	{
@@ -16899,7 +16931,8 @@ bool CSphIndex_VLN::DoGetKeywords ( CSphVector <CSphKeywordInfo> & dKeywords,
 		tAotFilter.m_pQueryWord = &tQueryWord;
 		tAotFilter.m_tFoldSettings = tSettings;
 		tAotFilter.m_tFoldSettings.m_bFoldWildcards = !bExpandWildcards;
-
+		tAotFilter.m_pOriginQuery = szQuery;
+		tAotFilter.m_pAnalyzer = this->m_pAnalyzer;
 		tExpCtx.m_pWordlist = &m_tWordlist;
 		tExpCtx.m_iMinPrefixLen = m_tSettings.m_iMinPrefixLen;
 		tExpCtx.m_iMinInfixLen = m_tSettings.m_iMinInfixLen;
@@ -17954,12 +17987,21 @@ bool CSphIndex_VLN::MultiQuery ( const CSphQuery * pQuery, CSphQueryResult * pRe
 		pProfile->Switch ( SPH_QSTATE_PARSE );
 
 	XQQuery_t tParsed;
+#ifndef USE_JIEBA
 	if ( !sphParseExtendedQuery ( tParsed, (const char*)sModifiedQuery, pQuery, m_pQueryTokenizer, &m_tSchema, pDict, m_tSettings ) )
 	{
 		// FIXME? might wanna reset profile to unknown state
 		pResult->m_sError = tParsed.m_sParseError;
 		return false;
 	}
+#else
+	if ( !sphParseJiebaQuery ( tParsed, (const char*)sModifiedQuery, this->m_pAnalyzer) )
+	{
+		// FIXME? might wanna reset profile to unknown state
+		pResult->m_sError = tParsed.m_sParseError;
+		return false;
+	}
+#endif
 	if ( !tParsed.m_sParseWarning.IsEmpty() )
 		pResult->m_sWarning = tParsed.m_sParseWarning;
 
@@ -25496,8 +25538,12 @@ void CSphSource_Document::BuildRegularHits ( SphDocID_t uDocid, CSphString text,
 	for(int i = 0; i< tokens.GetLength(); i++) 
 	{
 		std::cout<<tokens[i].text.cstr()<<"/";
-		memcpy(sBuf, tokens[i].text.cstr(), tokens[i].text.Length());
-		sBuf[tokens[i].text.Length()] = '\0';
+		int tokenLen = tokens[i].text.Length();
+		if(tokenLen > SPH_MAX_WORD_LEN){
+			tokenLen = SPH_MAX_WORD_LEN;
+		}
+		memcpy(sBuf, tokens[i].text.cstr(), tokenLen);
+		sBuf[tokenLen] = '\0';
 		SphWordID_t iWord = m_pDict->GetWordID ( sBuf );
 		if(iWord) {
 			m_tHits.AddHit ( uDocid, iWord, tokens[i].pos );

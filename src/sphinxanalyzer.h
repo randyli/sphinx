@@ -54,6 +54,8 @@ public:
 	// analyze a text
     virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens) = 0;
 
+	// analyze a query
+	virtual bool				AnalyzeQuery ( const CSphString   & query, CSphVector<SphToken> &tokens) = 0;
 
 };
 
@@ -63,6 +65,8 @@ class AnalyzerStandard : public  ISphAnalyzer
 public:
 
 	virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens);
+
+	virtual bool				AnalyzeQuery ( const CSphString   & query, CSphVector<SphToken> &tokens);
 };
 
 
@@ -80,6 +84,7 @@ public:
 	AnalyzerJieba(const JiebaConfig & config);
 	~AnalyzerJieba();
 	virtual bool                Analyze ( const CSphString   & text, CSphVector<SphToken> &tokens);
+	virtual bool				AnalyzeQuery ( const CSphString   & query, CSphVector<SphToken> &tokens);
 protected:
 	cppjieba::Jieba*			  m_pJieba;
 };

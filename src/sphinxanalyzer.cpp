@@ -23,6 +23,11 @@ namespace SphinxAnalyzer{
 			return false;
 	}
 
+
+	bool AnalyzerStandard::AnalyzeQuery(const CSphString & query, CSphVector < SphToken > & tokens){
+			return false;
+	}
+
 #if USE_JIEBA
 	AnalyzerJieba::AnalyzerJieba(const JiebaConfig & config){
 	this->m_pJieba = new cppjieba::Jieba(
@@ -56,6 +61,11 @@ namespace SphinxAnalyzer{
 			tokens.Add(token);
 		}
 		return true;
+	}
+	bool AnalyzerJieba::AnalyzeQuery(const CSphString & query, CSphVector < SphToken > & tokens){
+
+		return Analyze(query, tokens);
+		
 	}
 #endif
 }

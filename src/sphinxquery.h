@@ -312,6 +312,11 @@ void	sphSetupQueryTokenizer ( ISphTokenizer * pTokenizer, bool bWildcards, bool 
 /// FIXME! remove either pQuery or sQuery
 bool	sphParseExtendedQuery ( XQQuery_t & tQuery, const char * sQuery, const CSphQuery * pQuery, const ISphTokenizer * pTokenizer, const CSphSchema * pSchema, CSphDict * pDict, const CSphIndexSettings & tSettings );
 
+#ifdef USE_JIEBA
+bool	sphParseJiebaQuery ( XQQuery_t & tQuery, const char * sQuery, SphinxAnalyzer::ISphAnalyzer* analyzer );
+	
+#endif
+
 // perform boolean optimization on tree
 void	sphOptimizeBoolean ( XQNode_t ** pXQ, const ISphKeywordsStat * pKeywords );
 

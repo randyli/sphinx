@@ -2117,6 +2117,8 @@ struct ISphQueryFilter
 	const CSphIndexSettings *	m_pSettings;
 	GetKeywordsSettings_t		m_tFoldSettings;
 
+	SphinxAnalyzer::ISphAnalyzer* m_pAnalyzer;
+	const char* m_pOriginQuery;
 	ISphQueryFilter ();
 	virtual ~ISphQueryFilter ();
 

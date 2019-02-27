@@ -29,9 +29,9 @@ class XQParser_t;
 	#include "yysphinxquery.h"
 #endif
 
-// #define XQDEBUG 1
-// #define XQ_DUMP_TRANSFORMED_TREE 1
-// #define XQ_DUMP_NODE_ADDR 1
+#define XQDEBUG 1
+#define XQ_DUMP_TRANSFORMED_TREE 1
+#define XQ_DUMP_NODE_ADDR 1
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -1953,16 +1953,69 @@ CSphString sphReconstructNode ( const XQNode_t * pNode, const CSphSchema * pSche
 }
 
 
+bool sphParseJiebaQuery(XQQuery_t & tParsed, const char * sQuery, SphinxAnalyzer::ISphAnalyzer* analyzer)
+{
+	assert(analyzer);
+	CSphVector<SphinxAnalyzer::SphToken> tokens;
+	CSphString query(sQuery);
+	if(!analyzer->AnalyzeQuery(query, tokens)){
+		return false;
+	}
+
+	XQLimitSpec_t noLimit;
+	
+	XQNode_t * root = new XQNode_t (noLimit);
+	root->SetOp( SPH_QUERY_AND );
+	tParsed.m_pRoot = root;
+
+	for(int i=0; i<tokens.GetLength(); i++){
+		XQKeyword_t keyword ( tokens[i].text.cstr(), tokens[i].pos );
+		keyword.m_iSkippedBefore = 0;
+		XQNode_t * pNode = new XQNode_t(noLimit);
+		pNode->m_dWords.Add(keyword);
+		root->m_dChildren.Add(pNode);
+	}
+
+	/*
+	tAW.m_iSkippedBefore = iSkippedPosBeforeToken;
+	HandleModifiers ( tAW );
+
+	XQNode_t * pNode = new XQNode_t ( *m_dStateSpec.Last() );
+	pNode->m_dWords.Add ( tAW );
+	m_dSpawned.Add ( pNode );
+	return pNode;
+	*/
+	if(tokens.GetLength() == 1){
+		tParsed.m_bSingleWord = true;
+	}
+
+#ifdef XQDEBUG
+
+		printf ( "\n--- query ---\n" );
+		printf ( "%s\n", sQuery );
+		xqDump ( tParsed.m_pRoot, 0 );
+		printf ( "---\n" );
+#endif
+	
+	return true;
+	
+}
+
+
+
 bool sphParseExtendedQuery ( XQQuery_t & tParsed, const char * sQuery, const CSphQuery * pQuery, const ISphTokenizer * pTokenizer,
 	const CSphSchema * pSchema, CSphDict * pDict, const CSphIndexSettings & tSettings )
 {
-	XQParser_t qp;
-	bool bRes = qp.Parse ( tParsed, sQuery, pQuery, pTokenizer, pSchema, pDict, tSettings );
 
+		XQParser_t qp;
+		bool bRes = qp.Parse ( tParsed, sQuery, pQuery, pTokenizer, pSchema, pDict, tSettings );
+	
 #ifndef NDEBUG
-	if ( bRes && tParsed.m_pRoot )
-		tParsed.m_pRoot->Check ( true );
+		if ( bRes && tParsed.m_pRoot )
+			tParsed.m_pRoot->Check ( true );
 #endif
+
+
 
 #ifdef XQDEBUG
 	if ( bRes )

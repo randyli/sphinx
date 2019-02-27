@@ -18115,6 +18115,15 @@ ESphAddIndex AddIndex ( const char * szIndexName, const CSphConfigSection & hInd
 		tIdx.m_pIndex->GetStatus ( &tStatus );
 		tIdx.m_iMass = CalculateMass ( tStatus );
 
+		SphinxAnalyzer::JiebaConfig analyzerConfig;
+		analyzerConfig.DICT_PATH = "/home/sphinx/sphinx/cppjieba/dict/jieba.dict.utf8";
+		analyzerConfig.HMM_PATH = "/home/sphinx/sphinx/cppjieba/dict/hmm_model.utf8";
+		analyzerConfig.USER_DICT_PATH = "/home/sphinx/sphinx/cppjieba/dict/user.dict.utf8";
+		analyzerConfig.IDF_PATH = "/home/sphinx/sphinx/cppjieba/dict/idf.utf8";
+		analyzerConfig.STOP_WORD_PATH = "/home/sphinx/sphinx/cppjieba/dict/stop_words.utf8";
+		SphinxAnalyzer::ISphAnalyzer* analyzer = new SphinxAnalyzer::AnalyzerJieba(analyzerConfig);
+		tIdx.m_pIndex->SetAnalyzer(analyzer);
+
 		// done
 		if ( !g_pLocalIndexes->Add ( tIdx, szIndexName ) )
 		{
